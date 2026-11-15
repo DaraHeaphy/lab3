@@ -6,11 +6,41 @@ with and without undistortion. Writes out/[a,b]_ff[u,d].ply plus a metrics
 table and figures.
 """
 import csv
+import importlib.util
 import os
+import subprocess
+import sys
 
-import cv2
-import numpy as np
-import yaml
+# The CI image (ul-cs6524-cv-python-latex:lab01) has no OpenCV. Install any
+# missing dependency before importing it. This OpenCV build supports both
+# numpy 1.x and 2.x, so it does not force a numpy upgrade on scipy/matplotlib.
+REQUIREMENTS = {
+    'cv2': 'opencv-python-headless==4.10.0.84',
+    'numpy': 'numpy',
+    'scipy': 'scipy',
+    'yaml': 'pyyaml',
+    'matplotlib': 'matplotlib',
+}
+
+
+def ensure_requirements():
+    missing = [pkg for mod, pkg in REQUIREMENTS.items()
+               if importlib.util.find_spec(mod) is None]
+    if not missing:
+        return
+    print('installing missing packages:', ' '.join(missing), flush=True)
+    cmd = [sys.executable, '-m', 'pip', 'install', '--quiet', '--no-cache-dir', *missing]
+    if subprocess.call(cmd) != 0:
+        # Debian-based images refuse system-wide installs (PEP 668).
+        subprocess.check_call(cmd + ['--break-system-packages'])
+    importlib.invalidate_caches()
+
+
+ensure_requirements()
+
+import cv2  # noqa: E402
+import numpy as np  # noqa: E402
+import yaml  # noqa: E402
 from os import path as opath
 
 from mypylibs.geometry import write_ply
