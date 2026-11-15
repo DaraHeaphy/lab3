@@ -1,0 +1,37 @@
+# Video a: camera orbits the static globe. The whole scene is rigid, so
+# features are taken from the full frame (rug/floor help the pose); only the
+# dense reconstruction is restricted to the globe.
+frame_step: 1            # all frames of the 15 fps input; keyframes are chosen adaptively
+features:
+  detector: sift
+  n_features: 4000
+  ratio: 0.8
+  ransac_px: 1.0
+  mask: none
+  clahe: true            # contrast boost: the globe is dimly lit
+  keyframe_px: 20        # new keyframe once median feature displacement >= 20 px
+  keyframe_min_inliers: 100
+sfm:
+  tri_px: 2.0            # max reprojection error to accept a new 3D point
+  min_angle_deg: 1.0     # min triangulation angle (parallax)
+  pnp_px: 2.0
+  min_pnp_inliers: 15
+  init_max_start: 30     # skip up to 30 leading frames without parallax
+  init_max_gap: 10       # partner frame searched up to 10 frames ahead
+  init_min_points: 150
+  ba_every: 5            # windowed BA every 5 frames ...
+  ba_window: 10          # ... over the last 10 cameras
+  local_nfev: 20
+  global_ba: true
+  global_nfev: 50
+  huber_px: 1.5
+  prune_px: 2.0
+dense:
+  mask: globe
+  gap: 2                 # pair keyframe i with i+2 (~40 px parallax)
+  every: 1
+  fb_px: 0.5
+  tri_px: 1.0
+  min_angle_deg: 4.0
+  voxel: 0.004           # in units of median camera-to-point distance
+  min_views: 2
